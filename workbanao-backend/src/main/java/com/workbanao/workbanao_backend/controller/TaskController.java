@@ -1,5 +1,8 @@
 package com.workbanao.workbanao_backend.controller;
 
+import com.workbanao.workbanao_backend.dto.TaskDTO;
+import com.workbanao.workbanao_backend.dto.TaskRequest;
+import com.workbanao.workbanao_backend.dto.mappers.TaskMapper;
 import com.workbanao.workbanao_backend.entity.Task;
 import com.workbanao.workbanao_backend.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+//@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
@@ -16,15 +20,24 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
+    private final TaskMapper taskMapper;
+
+    public TaskController(TaskMapper taskMapper) {
+        this.taskMapper = taskMapper;
+    }
+
     @PostMapping("/create/{userId}")
-    public ResponseEntity<Task> createTask(@PathVariable Long userId, @RequestBody Task task) {
-        Task created = taskService.createTask(task, userId);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    public ResponseEntity<TaskDTO> createTask(@PathVariable Long userId, @RequestBody TaskRequest taskReq) {
+        Task task = taskMapper.toEntity(taskReq);
+        Task saved = taskService.createTask(task, userId);
+        return new ResponseEntity<>(taskMapper.toDTO(saved), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks(){
-        return new ResponseEntity<>(taskService.getAllTasks(),HttpStatus.OK);
+    public ResponseEntity<List<TaskDTO>> getAllTasks() {
+        List<TaskDTO> dtos = taskService.getAllTasks().stream()
+                .map(taskMapper::toDTO).toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/location/{location}")
