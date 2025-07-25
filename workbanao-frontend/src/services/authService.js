@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-const API_BASE = "http://localhost:8081/api/auth"; // adjust if your backend URL is different
+const API_URL = "http://localhost:8081/api/users";
 
-export const login = async (email, password) => {
-  return axios.post(`${API_BASE}/login`, { email, password });
-};
-
-export const register = async (userData) => {
-  return axios.post(`${API_BASE}/register`, userData);
+export const getUserByEmail = async (email) => {
+  return await axios.get(`${API_URL}/email/${email}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  });
 };

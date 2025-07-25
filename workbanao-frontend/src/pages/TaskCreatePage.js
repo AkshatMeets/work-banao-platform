@@ -5,7 +5,7 @@ const TaskCreatePage = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '',
+    budget: '',
     location: '',
   });
 
@@ -21,11 +21,11 @@ const TaskCreatePage = () => {
     try {
       const res = await axios.post(API_URL, formData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}` // if using auth
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
       alert('Task Created!');
-      setFormData({ title: '', description: '', category: '', location: '' });
+      setFormData({ title: '', description: '', budget: '', location: '' });
     } catch (err) {
       console.error(err);
       alert('Failed to create task');
@@ -57,10 +57,10 @@ const TaskCreatePage = () => {
         />
 
         <input
-          type="text"
-          name="category"
-          placeholder="Category"
-          value={formData.category}
+          type="number"
+          name="budget"
+          placeholder="Budget (in ₹)"
+          value={formData.budget}
           onChange={handleChange}
           required
           className="w-full p-2 border rounded"

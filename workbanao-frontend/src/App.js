@@ -1,24 +1,20 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import HomePage from './pages/HomePage';
-import TaskListPage from './pages/TaskListPage';
-import TaskCreatePage from './pages/TaskCreatePage';
-import Navbar from './components/Navbar';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import TaskForm from "./pages/TaskForm";
+import TaskList from "./pages/TaskList";
 
 function App() {
   return (
-    <Router>
-     <Navbar />
+    <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/tasks" element={<TaskListPage />} />
-        <Route path="/create-task" element={<TaskCreatePage />} />
+        <Route path="/" element={<TaskList />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/task-form" element={<TaskForm />} />
+        <Route path="/task-list" element={<TaskList />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 
