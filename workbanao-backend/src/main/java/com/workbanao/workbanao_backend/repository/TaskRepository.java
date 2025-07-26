@@ -9,5 +9,6 @@ public interface TaskRepository extends JpaRepository<Task,Long> {
 
     List<Task> findByLocationContainingIgnoreCase(String location);
     List<Task> findByCategoryContainingIgnoreCase(String category);
+    List<Task> findByCreatedBy_Id(Long userId);
 
 }

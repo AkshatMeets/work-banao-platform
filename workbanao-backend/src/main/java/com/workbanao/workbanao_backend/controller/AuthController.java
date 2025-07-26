@@ -40,19 +40,54 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody User user){
-        user.setPassword(encoder.encode(user.getPassword()));
-        User saved = userRepository.save(user);
-        return new ResponseEntity<>(userRepository.save(user), HttpStatus.CREATED);
+        try {
+            user.setPassword(encoder.encode(user.getPassword()));
+            User saved = userRepository.save(user);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        } catch (Exception e) {
+            System.err.println("Registration error: " + e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request){
-        Authentication auth = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword())
-        );
-        final UserDetails userDetails = userDetailService.loadUserByUsername(request.getEmail());
-        final String token = jwtUtil.generateToken(userDetails.getUsername());
+        try {
+            System.out.println("Login attempt for email: " + request.getEmail());
 
-        return ResponseEntity.ok(new AuthResponse(token));
+            // Authenticate the user
+            Authentication auth = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+
+            System.out.println("Authentication successful for: " + request.getEmail());
+
+            // Load user details
+            final UserDetails userDetails = userDetailService.loadUserByUsername(request.getEmail());
+
+            // Fetch the user to get the role and ID
+            User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() ->
+                    new RuntimeException("User not found"));
+
+            System.out.println("User found: " + user.getEmail() + ", Role: " + user.getRole() + ", ID: " + user.getId());
+
+            // Generate token with user ID included
+            final String accessToken = jwtUtil.generateToken(userDetails.getUsername(), user.getId());
+
+            // Generate refresh token (you can implement proper refresh token logic later)
+            final String refreshToken = "dummy-refresh-token";
+
+            // Create response
+            AuthResponse response = new AuthResponse(accessToken, refreshToken, user.getRole().name());
+
+            System.out.println("Login response created: " + response.toString());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.err.println("Login error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 }

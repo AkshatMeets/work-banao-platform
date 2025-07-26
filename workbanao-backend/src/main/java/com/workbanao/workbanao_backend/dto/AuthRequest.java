@@ -4,14 +4,16 @@ public class AuthRequest {
     private String email;
     private String password;
 
-    public AuthRequest() {
-    }
+    // Default constructor
+    public AuthRequest() {}
 
+    // Constructor with parameters
     public AuthRequest(String email, String password) {
         this.email = email;
         this.password = password;
     }
 
+    // Getters and Setters
     public String getEmail() {
         return email;
     }
@@ -26,5 +28,13 @@ public class AuthRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "AuthRequest{" +
+                "email='" + email + '\'' +
+                ", password='" + (password != null ? "***" : "null") + '\'' +
+                '}';
     }
 }

@@ -1,5 +1,6 @@
 package com.workbanao.workbanao_backend.controller;
 
+import com.workbanao.workbanao_backend.repository.UserRepository;
 import com.workbanao.workbanao_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user){
         User registered = userService.registerUser(user);
@@ -25,4 +29,12 @@ public class UserController {
                 .map(user -> new ResponseEntity<>(user,HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(user);
+    }
+
 }

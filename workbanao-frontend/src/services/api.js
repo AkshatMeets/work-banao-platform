@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// Create Axios instance with enhanced configuration
+// Create Axios instance with base config
 const api = axios.create({
   baseURL: "http://localhost:8081/api",
   timeout: 10000,
@@ -10,72 +10,88 @@ const api = axios.create({
   responseType: "json",
 });
 
-// Request interceptor for logging or modifying requests
+// ✅ Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    console.log("Request sent to:", config.url);
+    console.log("📤 Request to:", config.url);
     return config;
   },
   (error) => {
-    console.error("Request setup error:", error.message);
+    console.error("❌ Request error:", error.message);
     return Promise.reject(error);
   }
 );
 
-// Function to set Authorization header globally
+// ✅ Set or remove Auth token globally
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    console.log("✅ Auth token set");
   } else {
     delete api.defaults.headers.common["Authorization"];
+    console.log("🧹 Auth token removed");
   }
 };
 
-// Function to refresh token
+// ✅ Refresh access token using refresh token
 export const refreshToken = async () => {
   try {
-    const response = await axios.post("http://localhost:8081/api/refresh-token", {
-      refreshToken: localStorage.getItem("refreshToken"),
+    const refreshToken = localStorage.getItem("refreshToken");
+    const response = await axios.post("http://localhost:8081/api/auth/refresh-token", {
+      refreshToken,
     });
-    const newToken = response.data.accessToken;
-    setAuthToken(newToken);
-    localStorage.setItem("accessToken", newToken);
-    return newToken;
+    const newAccessToken = response.data.token;
+
+    // Update headers + localStorage
+    setAuthToken(newAccessToken);
+    localStorage.setItem("accessToken", newAccessToken);
+    console.log("🔄 Token refreshed");
+
+    return newAccessToken;
   } catch (error) {
-    console.error("Token refresh failed:", error.response?.data || error.message);
+    console.error("⚠️ Token refresh failed:", error.response?.data || error.message);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
     throw error;
   }
 };
 
-// Response interceptor with token refresh for 401 errors
+// ✅ Response Interceptor to handle 401 and auto-refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const skipRedirect = originalRequest.headers["X-Skip-Redirect"] === "true";
+
+    if (error.response?.status === 401 && !originalRequest._retry && !skipRedirect) {
       originalRequest._retry = true;
       try {
         const newToken = await refreshToken();
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-        return api(originalRequest);
+        return api(originalRequest); // Retry original request
       } catch (refreshError) {
-        console.error("Unable to refresh token:", refreshError);
-        window.location.href = "/login";
+        console.error("🔒 Unable to refresh token:", refreshError.message);
+        window.location.href = "/login"; // Redirect only if refresh fails
       }
     }
-    console.error("API error:", {
+
+    console.error("❗ API error:", {
       status: error.response?.status,
       data: error.response?.data,
-      url: error.config?.url,
+      url: originalRequest?.url,
     });
+
     return Promise.reject(error);
   }
 );
 
-// Initialize token from localStorage
+
+// ✅ Set token on app startup (if exists)
 const storedToken = localStorage.getItem("accessToken");
 if (storedToken) {
   setAuthToken(storedToken);
+  console.log("🚀 Initialized token from localStorage");
 }
 
 export default api;
